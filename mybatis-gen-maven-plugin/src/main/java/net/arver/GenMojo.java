@@ -3,12 +3,12 @@ package net.arver;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
-import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -20,8 +20,10 @@ import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.config.Configuration;
 import org.mybatis.generator.config.Context;
-import org.mybatis.generator.config.DomainObjectRenamingRule;
-import org.mybatis.generator.config.TableConfiguration;
+import org.mybatis.generator.config.JavaClientGeneratorConfiguration;
+import org.mybatis.generator.config.JavaModelGeneratorConfiguration;
+import org.mybatis.generator.config.PluginConfiguration;
+import org.mybatis.generator.config.SqlMapGeneratorConfiguration;
 import org.mybatis.generator.config.xml.ConfigurationParser;
 import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.exception.XMLParserException;
@@ -39,6 +41,28 @@ import org.mybatis.generator.internal.util.messages.Messages;
         requiresDependencyResolution = ResolutionScope.TEST
 )
 public class GenMojo extends AbstractMojo {
+
+    /**
+     * Line separator.
+     */
+    public static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
+    /**
+     * Date time formatter.
+     */
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    /**
+     * Java source base directory.
+     */
+    @Parameter(property = "gen.javaBaseDir", defaultValue ="${basedir}/src/main/java/")
+    private String javaBaseDir;
+
+    /**
+     * Resource base directory.
+     */
+    @Parameter(property = "gen.resourceBaseDir", defaultValue ="${basedir}/src/main/resources/")
+    private String resourceBaseDir;
 
     /**
      * Maven project.
@@ -80,6 +104,30 @@ public class GenMojo extends AbstractMojo {
     @Parameter(property = "mybatis.generator.overwrite", defaultValue = "true")
     private boolean overwrite;
 
+    /**
+     * Entity source directory.
+     */
+    @Parameter(property = "gen.entityPackage")
+    private String entityPackage;
+
+    /**
+     * Application object package name.
+     */
+    @Parameter(property = "gen.appObjectPackage")
+    private String appObjectPackage;
+
+    /**
+     * Mapper directory.
+     */
+    @Parameter(property = "gen.mapperPackage", defaultValue = "")
+    private String mapperPackage;
+
+    /**
+     * 模版配置.
+     */
+    private static final freemarker.template.Configuration TEMPLATE_CFG =
+            new freemarker.template.Configuration(freemarker.template.Configuration.VERSION_2_3_22);
+
     public void execute() throws MojoExecutionException {
         if (configurationFile == null) {
             throw new MojoExecutionException(
@@ -120,9 +168,12 @@ public class GenMojo extends AbstractMojo {
                     project.getProperties(), warnings);
             Configuration config = cp.parseConfiguration(configurationFile);
 
-            final List<Context> contexts = config.getContexts();
-            for (final Context context : contexts) {
-                final List<TableConfiguration> tableConfigurations = context.getTableConfigurations();
+            final List<Context> contextList = config.getContexts();
+            for (final Context context : contextList) {
+                final PluginConfiguration demoPlugin = new PluginConfiguration();
+                demoPlugin.setConfigurationType(DemoPlugin.class.getName());
+                context.addPluginConfiguration(demoPlugin);
+                /*final List<TableConfiguration> tableConfigurations = context.getTableConfigurations();
                 for (final TableConfiguration tableConfiguration : tableConfigurations) {
                     if (tableConfiguration.getDomainObjectRenamingRule() == null) {
                         final DomainObjectRenamingRule domainObjectRenamingRule = new DomainObjectRenamingRule();
@@ -130,6 +181,23 @@ public class GenMojo extends AbstractMojo {
                         domainObjectRenamingRule.setReplaceString("Base");
                         tableConfiguration.setDomainObjectRenamingRule(domainObjectRenamingRule);
                     }
+                }*/
+                final SqlMapGeneratorConfiguration sqlMapConfiguration = context.getSqlMapGeneratorConfiguration();
+                if (sqlMapConfiguration != null) {
+                    final String targetPackage = String.join(".", sqlMapConfiguration.getTargetPackage(), "gen");
+                    sqlMapConfiguration.setTargetPackage(targetPackage);
+                }
+                final JavaModelGeneratorConfiguration javaModelConfiguration = context.getJavaModelGeneratorConfiguration();
+                if (javaModelConfiguration != null) {
+                    final String exampleTargetPackage = javaModelConfiguration.getProperty("exampleTargetPackage");
+                    if (exampleTargetPackage == null) {
+                        javaModelConfiguration.addProperty("exampleTargetPackage", String.join(".", javaModelConfiguration.getTargetPackage(), "gen"));
+                    }
+                }
+                final JavaClientGeneratorConfiguration javaClientConfiguration = context.getJavaClientGeneratorConfiguration();
+                if (javaClientConfiguration != null) {
+                    final String targetPackage = String.join(".", javaClientConfiguration.getTargetPackage(), "gen");
+                    javaClientConfiguration.setTargetPackage(targetPackage);
                 }
             }
 
@@ -163,15 +231,6 @@ public class GenMojo extends AbstractMojo {
         for (String error : warnings) {
             getLog().warn(error);
         }
-
-        if (project != null && outputDirectory != null
-                && outputDirectory.exists()) {
-            project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
-
-            Resource resource = new Resource();
-            resource.setDirectory(outputDirectory.getAbsolutePath());
-            resource.addInclude("**/*.xml");
-            project.addResource(resource);
-        }
     }
+
 }
