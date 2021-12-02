@@ -15,6 +15,9 @@
         <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
         <!--生成mapper.xml时覆盖原文件-->
         <plugin type="org.mybatis.generator.plugins.UnmergeableXmlMappersPlugin" />
+        <plugin type="net.arver.plugin.BaseMapperInterfacePlugin" >
+            <property name="useExample" value="true"/>
+        </plugin>
 
         <plugin type="org.mybatis.generator.plugins.RenameExampleClassPlugin">
             <property name="searchString" value="Base((\w)*)$"/>
