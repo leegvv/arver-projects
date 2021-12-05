@@ -79,15 +79,6 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
                     mapperInterface.addMethod(method);
                 }
             }
-            /*final List<GeneratedJavaFile> generatedJavaFiles = introspectedTable.getGeneratedJavaFiles();
-            for (final GeneratedJavaFile generatedJavaFile : generatedJavaFiles) {
-                final CompilationUnit compilationUnit = generatedJavaFile.getCompilationUnit();
-                final FullyQualifiedJavaType type = compilationUnit.getType();
-                final String shortName = type.getShortName();
-                if (shortName.endsWith("DAO")) {
-
-                }
-            }*/
 
             try {
                 final GeneratedJavaFile mapperJavaFile = new GeneratedJavaFile(mapperInterface, targetProject, javaFileEncoding, javaFormatter);

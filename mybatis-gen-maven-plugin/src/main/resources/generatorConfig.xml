@@ -18,6 +18,7 @@
         <plugin type="net.arver.plugin.BaseMapperInterfacePlugin" >
             <property name="useExample" value="true"/>
         </plugin>
+        <plugin type="net.arver.plugin.AoPlugin"></plugin>
         
         <plugin type="net.arver.plugin.MySQLPaginationPlugin"></plugin>
         <commentGenerator type="net.arver.plugin.CommentGenerator">
