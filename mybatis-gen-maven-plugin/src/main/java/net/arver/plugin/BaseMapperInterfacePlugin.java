@@ -1,14 +1,10 @@
 package net.arver.plugin;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.JavaFormatter;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.ShellCallback;
-import org.mybatis.generator.api.dom.java.CompilationUnit;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.JavaVisibility;
@@ -17,6 +13,10 @@ import org.mybatis.generator.api.dom.java.Parameter;
 import org.mybatis.generator.exception.ShellException;
 import org.mybatis.generator.internal.DefaultShellCallback;
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 生成mapper接口通用父接口插件.
@@ -46,7 +46,7 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
 
     @Override
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles(final IntrospectedTable introspectedTable) {
-        final boolean hasPk = introspectedTable.hasPrimaryKeyColumns();
+        //final boolean hasPk = introspectedTable.hasPrimaryKeyColumns();
         final JavaFormatter javaFormatter = context.getJavaFormatter();
         final String targetProject = context.getJavaClientGeneratorConfiguration().getTargetProject();
         final String targetPackage = context.getJavaClientGeneratorConfiguration().getTargetPackage();
@@ -79,7 +79,7 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
                     mapperInterface.addMethod(method);
                 }
             }
-            final List<GeneratedJavaFile> generatedJavaFiles = introspectedTable.getGeneratedJavaFiles();
+            /*final List<GeneratedJavaFile> generatedJavaFiles = introspectedTable.getGeneratedJavaFiles();
             for (final GeneratedJavaFile generatedJavaFile : generatedJavaFiles) {
                 final CompilationUnit compilationUnit = generatedJavaFile.getCompilationUnit();
                 final FullyQualifiedJavaType type = compilationUnit.getType();
@@ -87,7 +87,7 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
                 if (shortName.endsWith("DAO")) {
 
                 }
-            }
+            }*/
 
             try {
                 final GeneratedJavaFile mapperJavaFile = new GeneratedJavaFile(mapperInterface, targetProject, javaFileEncoding, javaFormatter);
@@ -101,7 +101,6 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
             }
         }
         this.methods.clear();
-
         return mapperJavaFiles;
     }
 
