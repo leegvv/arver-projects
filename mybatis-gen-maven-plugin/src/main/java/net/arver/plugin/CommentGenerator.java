@@ -39,6 +39,7 @@ public class CommentGenerator extends DefaultCommentGenerator {
             final StringBuilder sb = new StringBuilder();
             sb.append(" * ");
             sb.append(remarks);
+            sb.append(".");
             field.addJavaDocLine(sb.toString());
             field.addJavaDocLine(" */");
         }
