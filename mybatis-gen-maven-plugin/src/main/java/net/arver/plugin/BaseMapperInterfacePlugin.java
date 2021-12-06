@@ -1,5 +1,8 @@
 package net.arver.plugin;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.JavaFormatter;
@@ -12,11 +15,8 @@ import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.Parameter;
 import org.mybatis.generator.exception.ShellException;
 import org.mybatis.generator.internal.DefaultShellCallback;
-import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
  * 生成mapper接口通用父接口插件.
@@ -98,7 +98,8 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
     @Override
     public boolean clientGenerated(final Interface interfaze, final IntrospectedTable introspectedTable) {
         interfaze.addJavaDocLine("/**");
-        interfaze.addJavaDocLine(" * " + interfaze.getType().getShortName() + "继承基类");
+        interfaze.addJavaDocLine(" * " + interfaze.getType().getShortName() + "继承基类.");
+        interfaze.addJavaDocLine(" * " + "由MybatisGenerator自动生成请勿修改");
         interfaze.addJavaDocLine(" */");
 
         final String mapperSuperClass = interfaze.getType().getPackageName() + DEFAULT_MAPPER_SUPER_CLASS;

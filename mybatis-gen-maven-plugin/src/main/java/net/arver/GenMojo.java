@@ -77,7 +77,6 @@ public class GenMojo extends AbstractMojo {
             for (String error : e.getErrors()) {
                 getLog().error(error);
             }
-
             throw new MojoExecutionException(e.getMessage());
         } catch (SQLException e) {
             throw new MojoExecutionException(e.getMessage());
@@ -87,7 +86,6 @@ public class GenMojo extends AbstractMojo {
             for (String error : e.getErrors()) {
                 getLog().error(error);
             }
-
             throw new MojoExecutionException(e.getMessage());
         } catch (InterruptedException e) {
             // ignore (will never happen with the DefaultShellCallback)

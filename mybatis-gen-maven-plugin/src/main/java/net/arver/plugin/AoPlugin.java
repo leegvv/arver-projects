@@ -1,30 +1,34 @@
 package net.arver.plugin;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import org.mybatis.generator.api.GeneratedJavaFile;
+import org.mybatis.generator.api.GeneratedXmlFile;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.JavaFormatter;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.ShellCallback;
+import org.mybatis.generator.api.XmlFormatter;
 import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.JavaVisibility;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.api.dom.xml.Attribute;
+import org.mybatis.generator.api.dom.xml.Document;
+import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.JavaClientGeneratorConfiguration;
 import org.mybatis.generator.config.JavaModelGeneratorConfiguration;
 import org.mybatis.generator.config.SqlMapGeneratorConfiguration;
 import org.mybatis.generator.exception.ShellException;
 import org.mybatis.generator.internal.DefaultShellCallback;
-import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
+import org.mybatis.generator.internal.util.StringUtility;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
  * AoPlugin.
@@ -44,6 +48,14 @@ public class AoPlugin extends PluginAdapter {
 
     private List<Field> fields = new ArrayList<>();
 
+    private static final String GEN_PACKAGE = "gen";
+
+    private static final String MAPPER_SUFFIX = "Mapper";
+
+    private static final String GENERATED_STR = "Generated";
+
+    private static final String SUPER_MODEL_PREFIX = "Base";
+
     @Override
     public boolean validate(final List<String> warnings) {
         return true;
@@ -53,19 +65,19 @@ public class AoPlugin extends PluginAdapter {
     public void setContext(final Context context) {
         final SqlMapGeneratorConfiguration sqlMapConfiguration = context.getSqlMapGeneratorConfiguration();
         if (sqlMapConfiguration != null) {
-            final String targetPackage = sqlMapConfiguration.getTargetPackage() + ".gen";
+            final String targetPackage = sqlMapConfiguration.getTargetPackage() + "." + GEN_PACKAGE;
             sqlMapConfiguration.setTargetPackage(targetPackage);
         }
         final JavaClientGeneratorConfiguration clientConfiguration = context.getJavaClientGeneratorConfiguration();
         if (clientConfiguration != null) {
-            final String targetPackage = clientConfiguration.getTargetPackage() + ".gen";
+            final String targetPackage = clientConfiguration.getTargetPackage() + "." + GEN_PACKAGE;
             clientConfiguration.setTargetPackage(targetPackage);
         }
         final JavaModelGeneratorConfiguration modelConfiguration = context.getJavaModelGeneratorConfiguration();
         if (modelConfiguration != null) {
             final String exampleTargetPackage = modelConfiguration.getProperty("exampleTargetPackage");
             if (exampleTargetPackage == null) {
-                modelConfiguration.addProperty("exampleTargetPackage", modelConfiguration.getTargetPackage() + ".gen");
+                modelConfiguration.addProperty("exampleTargetPackage", modelConfiguration.getTargetPackage() + "." + GEN_PACKAGE);
             }
         }
         super.setContext(context);
@@ -74,66 +86,85 @@ public class AoPlugin extends PluginAdapter {
     @Override
     public void initialized(final IntrospectedTable introspectedTable) {
         final String oldMapperType = introspectedTable.getMyBatis3JavaMapperType();
-        final Pattern mapperPattern = Pattern.compile("Mapper$");
-        final Matcher mapperMatcher = mapperPattern.matcher(oldMapperType);
-        final String mapperType = mapperMatcher.replaceAll("GeneratedMapper");
+        final String mapperType = oldMapperType.replaceAll(MAPPER_SUFFIX + "$", GENERATED_STR + MAPPER_SUFFIX);
         introspectedTable.setMyBatis3JavaMapperType(mapperType);
 
         final String oldXmlMapperName = introspectedTable.getMyBatis3XmlMapperFileName();
-        final Pattern xmlPattern = Pattern.compile("Mapper$");
-        final Matcher xmlMatcher = xmlPattern.matcher(oldXmlMapperName);
-        final String xmlFileName = xmlMatcher.replaceAll("GeneratedMapper");
+        final String xmlFileName = oldXmlMapperName.replaceAll(MAPPER_SUFFIX + ".xml$", GENERATED_STR + MAPPER_SUFFIX + ".xml");
         introspectedTable.setMyBatis3XmlMapperFileName(xmlFileName);
     }
 
     @Override
     public boolean modelFieldGenerated(final Field field, final TopLevelClass topLevelClass, final IntrospectedColumn introspectedColumn, final IntrospectedTable introspectedTable, final ModelClassType modelClassType) {
         fields.add(field);
-        return true;
+        return false;
     }
 
     @Override
     public boolean modelGetterMethodGenerated(final Method method, final TopLevelClass topLevelClass, final IntrospectedColumn introspectedColumn, final IntrospectedTable introspectedTable, final ModelClassType modelClassType) {
         methods.add(method);
-        return true;
+        return false;
     }
 
     @Override
     public boolean modelSetterMethodGenerated(final Method method, final TopLevelClass topLevelClass, final IntrospectedColumn introspectedColumn, final IntrospectedTable introspectedTable, final ModelClassType modelClassType) {
         methods.add(method);
-        return true;
+        return false;
     }
 
     @Override
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles(final IntrospectedTable introspectedTable) {
         final JavaFormatter javaFormatter = context.getJavaFormatter();
-        final String targetProject = context.getJavaModelGeneratorConfiguration().getTargetProject();
-        final String targetPackage = context.getJavaModelGeneratorConfiguration().getTargetPackage();
+        final String modelTargetProject = context.getJavaModelGeneratorConfiguration().getTargetProject();
+        final String modelTargetPackage = context.getJavaModelGeneratorConfiguration().getTargetPackage();
         final String javaFileEncoding = context.getProperty("javaFileEncoding");
         final String baseRecordType = introspectedTable.getBaseRecordType();
         final String shortName = baseRecordType.substring(baseRecordType.lastIndexOf(".") + 1);
-        final Interface mapperInterface = new Interface(targetPackage + ".gen.Base" + shortName);
+        final TopLevelClass baseModelClass = new TopLevelClass(modelTargetPackage + "." + GEN_PACKAGE + "." + SUPER_MODEL_PREFIX + shortName);
 
         final List<GeneratedJavaFile> mapperJavaFiles = new ArrayList<>();
-        if (stringHasValue(targetPackage)) {
-            mapperInterface.addImportedType(SERIALIZABLE_TYPE);
+        if (stringHasValue(modelTargetPackage)) {
+            baseModelClass.addImportedType(SERIALIZABLE_TYPE);
+            baseModelClass.addSuperInterface(SERIALIZABLE_TYPE);
+            baseModelClass.setVisibility(JavaVisibility.PUBLIC);
 
-            mapperInterface.setVisibility(JavaVisibility.PUBLIC);
-            final FullyQualifiedJavaType baseJavaType = mapperInterface.getType();
+            String remarks = introspectedTable.getRemarks();
+            if (!StringUtility.stringHasValue(remarks)) {
+                remarks = introspectedTable.getFullyQualifiedTable().getIntrospectedTableName();
+            }
+            baseModelClass.addJavaDocLine("/**");
+            baseModelClass.addJavaDocLine(" * " + remarks + ".");
+            baseModelClass.addJavaDocLine(" * " + "由MybatisGenerator自动生成请勿修改");
+            baseModelClass.addJavaDocLine(" */");
+
             if (!this.methods.isEmpty()) {
                 for (final Method method : methods) {
-                    mapperInterface.addMethod(method);
+                    baseModelClass.addMethod(method);
                 }
             }
             if (!this.fields.isEmpty()) {
                 for (final Field field : fields) {
-                    mapperInterface.addField(field);
+                    baseModelClass.addField(field);
                 }
             }
+            final GeneratedJavaFile mapperJavaFile = new GeneratedJavaFile(baseModelClass, modelTargetProject, javaFileEncoding, javaFormatter);
+            mapperJavaFiles.add(mapperJavaFile);
+        }
 
+        final String targetProject = context.getJavaClientGeneratorConfiguration().getTargetProject();
+        final String targetPackage = context.getJavaClientGeneratorConfiguration().getTargetPackage();
+        String mapperType = introspectedTable.getMyBatis3JavaMapperType();
+        mapperType = mapperType.replaceAll("." + GEN_PACKAGE + "(.\\S+)" + GENERATED_STR + MAPPER_SUFFIX + "$", "$1" + MAPPER_SUFFIX);
+        final Interface mapperInterface = new Interface(mapperType);
+
+        if (stringHasValue(targetPackage)) {
+            mapperInterface.setVisibility(JavaVisibility.PUBLIC);
+            final FullyQualifiedJavaType mapperSuperType = new FullyQualifiedJavaType(introspectedTable.getMyBatis3JavaMapperType());
+            mapperInterface.addImportedType(mapperSuperType);
+            mapperInterface.addSuperInterface(mapperSuperType);
             try {
                 final GeneratedJavaFile mapperJavaFile = new GeneratedJavaFile(mapperInterface, targetProject, javaFileEncoding, javaFormatter);
-                final File mapperDir = shellCallback.getDirectory(targetProject, targetPackage);
+                final File mapperDir = shellCallback.getDirectory(targetProject, targetPackage.replaceAll("." + GEN_PACKAGE + "$", ""));
                 final File mapperFile = new File(mapperDir, mapperJavaFile.getFileName());
                 if (!mapperFile.exists()) {
                     mapperJavaFiles.add(mapperJavaFile);
@@ -143,7 +174,66 @@ public class AoPlugin extends PluginAdapter {
             }
         }
         this.methods.clear();
-        this.methods.clear();
+        this.fields.clear();
         return mapperJavaFiles;
+    }
+
+    @Override
+    public List<GeneratedXmlFile> contextGenerateAdditionalXmlFiles(final IntrospectedTable introspectedTable) {
+        final List<GeneratedXmlFile> generatedXmlFiles = new ArrayList<>();
+
+        final XmlFormatter xmlFormatter = context.getXmlFormatter();
+        final String targetProject = context.getSqlMapGeneratorConfiguration().getTargetProject();
+        final Document document = new Document();
+        final XmlElement rootElement = new XmlElement("mapper");
+        final String generatedMapperType = introspectedTable.getMyBatis3JavaMapperType();
+        final String mapperType = generatedMapperType.replaceAll(GEN_PACKAGE + ".(\\S+)" + GENERATED_STR + MAPPER_SUFFIX + "$", "$1" + MAPPER_SUFFIX);
+        rootElement.addAttribute(new Attribute("namespace", mapperType));
+        final XmlElement resultMapElement = new XmlElement("resultMap");
+        resultMapElement.addAttribute(new Attribute("id", "BaseResultMap"));
+
+        final String baseRecordType = introspectedTable.getBaseRecordType();
+        resultMapElement.addAttribute(new Attribute("type", baseRecordType));
+        resultMapElement.addAttribute(new Attribute("extends", generatedMapperType + ".BaseResultMap"));
+        rootElement.addElement(resultMapElement);
+        document.setRootElement(rootElement);
+        String xmlPackage = introspectedTable.getMyBatis3XmlMapperPackage();
+        xmlPackage = xmlPackage.replaceAll("." + GEN_PACKAGE + "$", "");
+        String xmlFileName = introspectedTable.getMyBatis3XmlMapperFileName();
+        xmlFileName = xmlFileName.replaceAll(GENERATED_STR + MAPPER_SUFFIX + ".xml$", MAPPER_SUFFIX + ".xml");
+        try {
+            final GeneratedXmlFile generatedXmlFile = new GeneratedXmlFile(document, xmlFileName, xmlPackage, targetProject, true, xmlFormatter);
+            final File mapperDir = shellCallback.getDirectory(targetProject, xmlPackage);
+            final File mapperFile = new File(mapperDir, generatedXmlFile.getFileName());
+            if (!mapperFile.exists()) {
+                generatedXmlFiles.add(generatedXmlFile);
+            }
+        } catch (ShellException e) {
+            e.printStackTrace();
+        }
+        return generatedXmlFiles;
+    }
+
+    @Override
+    public boolean modelBaseRecordClassGenerated(final TopLevelClass topLevelClass, final IntrospectedTable introspectedTable) {
+        final String mapperSuperClass = topLevelClass.getType().getPackageName() + "." + GEN_PACKAGE + "." + SUPER_MODEL_PREFIX + topLevelClass.getType().getShortName();
+        final FullyQualifiedJavaType mapperSuperType = new FullyQualifiedJavaType(mapperSuperClass);
+        topLevelClass.addImportedType(mapperSuperType);
+        topLevelClass.setSuperClass(mapperSuperType);
+        topLevelClass.addImportedType(SERIALIZABLE_TYPE);
+        topLevelClass.addSuperInterface(SERIALIZABLE_TYPE);
+
+        final String targetProject = context.getJavaModelGeneratorConfiguration().getTargetProject();
+        final String targetPackage = context.getJavaModelGeneratorConfiguration().getTargetPackage();
+        try {
+            final File mapperDir = shellCallback.getDirectory(targetProject, targetPackage);
+            final File mapperFile = new File(mapperDir, topLevelClass.getType().getShortName() + ".java");
+            if (mapperFile.exists()) {
+                return false;
+            }
+        } catch (ShellException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 }
