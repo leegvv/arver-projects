@@ -1,8 +1,5 @@
 package net.arver.plugin;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.GeneratedXmlFile;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -27,8 +24,11 @@ import org.mybatis.generator.config.SqlMapGeneratorConfiguration;
 import org.mybatis.generator.exception.ShellException;
 import org.mybatis.generator.internal.DefaultShellCallback;
 import org.mybatis.generator.internal.util.StringUtility;
-
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * AoPlugin.
@@ -41,6 +41,8 @@ public class AoPlugin extends PluginAdapter {
     }
 
     private static final FullyQualifiedJavaType SERIALIZABLE_TYPE = new FullyQualifiedJavaType("java.io.Serializable");
+
+    private static final FullyQualifiedJavaType MAPPER_TYPE = new FullyQualifiedJavaType("org.apache.ibatis.annotations.Mapper");
 
     private ShellCallback shellCallback = null;
 
@@ -162,6 +164,8 @@ public class AoPlugin extends PluginAdapter {
             final FullyQualifiedJavaType mapperSuperType = new FullyQualifiedJavaType(introspectedTable.getMyBatis3JavaMapperType());
             mapperInterface.addImportedType(mapperSuperType);
             mapperInterface.addSuperInterface(mapperSuperType);
+            mapperInterface.addImportedType(MAPPER_TYPE);
+            mapperInterface.addAnnotation("@Mapper");
             try {
                 final GeneratedJavaFile mapperJavaFile = new GeneratedJavaFile(mapperInterface, targetProject, javaFileEncoding, javaFormatter);
                 final File mapperDir = shellCallback.getDirectory(targetProject, targetPackage.replaceAll("." + GEN_PACKAGE + "$", ""));
