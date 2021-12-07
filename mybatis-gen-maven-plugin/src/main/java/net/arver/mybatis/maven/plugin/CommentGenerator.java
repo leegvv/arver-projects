@@ -1,4 +1,4 @@
-package net.arver.plugin;
+package net.arver.mybatis.maven.plugin;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;

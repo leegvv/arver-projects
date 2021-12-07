@@ -1,4 +1,4 @@
-package net.arver.plugin;
+package net.arver.mybatis.maven.plugin;
 
 import java.io.File;
 import java.util.ArrayList;

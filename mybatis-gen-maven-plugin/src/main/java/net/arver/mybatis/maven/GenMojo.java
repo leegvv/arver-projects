@@ -1,4 +1,4 @@
-package net.arver;
+package net.arver.mybatis.maven;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
