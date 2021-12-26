@@ -8,9 +8,9 @@ import java.util.List;
  * @author li gu
  * @version 1.0.0.0
  **/
-public class FullyQualifiedJavaType implements Comparable<FullyQualifiedJavaType{
+public class FullyQualifiedJavaType implements Comparable<FullyQualifiedJavaType>{
 
-    private static final String JAVA_LANG = "java.lang"; //$NON-NLS-1$
+    private static final String JAVA_LANG = "java.lang";
 
     private static FullyQualifiedJavaType intInstance = null;
 

@@ -67,6 +67,7 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
             if (isUserExample()) {
                 mapperInterface.addJavaDocLine(" * " + "@param <Example> The Example Class");
             }
+            mapperInterface.addJavaDocLine(" * @author " + System.getProperty("user.name"));
             mapperInterface.addJavaDocLine(" */");
             final FullyQualifiedJavaType baseMapperInterfaceJavaType = mapperInterface.getType();
             baseMapperInterfaceJavaType.addTypeArgument(new FullyQualifiedJavaType("Entity"));
@@ -76,6 +77,18 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
             }
             if (!this.methods.isEmpty()) {
                 for (final Method method : methods) {
+                    method.addJavaDocLine("/**");
+                    method.addJavaDocLine(" * " + method.getName() + ".");
+                    List<Parameter> parameters = method.getParameters();
+                    if (parameters != null && parameters.size() > 0) {
+                        for (Parameter parameter : parameters) {
+                            method.addJavaDocLine(" * @param " + parameter.getName() + " " + parameter.getName());
+                        }
+                    }
+                    if (method.getReturnType().isPresent()) {
+                        method.addJavaDocLine(" * @return " + method.getReturnType().get().getShortName());
+                    }
+                    method.addJavaDocLine(" */");
                     mapperInterface.addMethod(method);
                 }
             }
@@ -100,6 +113,7 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
         interfaze.addJavaDocLine("/**");
         interfaze.addJavaDocLine(" * " + interfaze.getType().getShortName() + "继承基类.");
         interfaze.addJavaDocLine(" * " + "由MybatisGenerator自动生成请勿修改");
+        interfaze.addJavaDocLine(" * @author " + System.getProperty("user.name"));
         interfaze.addJavaDocLine(" */");
 
         final String mapperSuperClass = interfaze.getType().getPackageName() + DEFAULT_MAPPER_SUPER_CLASS;

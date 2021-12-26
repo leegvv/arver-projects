@@ -15,8 +15,10 @@ import org.mybatis.generator.api.dom.java.JavaVisibility;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.api.dom.xml.Attribute;
+import org.mybatis.generator.api.dom.xml.DocType;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.codegen.XmlConstants;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.JavaClientGeneratorConfiguration;
 import org.mybatis.generator.config.JavaModelGeneratorConfiguration;
@@ -160,6 +162,10 @@ public class AoPlugin extends PluginAdapter {
         final Interface mapperInterface = new Interface(mapperType);
 
         if (stringHasValue(targetPackage)) {
+            mapperInterface.addJavaDocLine("/**");
+            mapperInterface.addJavaDocLine(" * " + mapperInterface.getType().getShortName() + ".");
+            mapperInterface.addJavaDocLine(" * @author " + System.getProperty("user.name"));
+            mapperInterface.addJavaDocLine(" */");
             mapperInterface.setVisibility(JavaVisibility.PUBLIC);
             final FullyQualifiedJavaType mapperSuperType = new FullyQualifiedJavaType(introspectedTable.getMyBatis3JavaMapperType());
             mapperInterface.addImportedType(mapperSuperType);
@@ -188,7 +194,9 @@ public class AoPlugin extends PluginAdapter {
 
         final XmlFormatter xmlFormatter = context.getXmlFormatter();
         final String targetProject = context.getSqlMapGeneratorConfiguration().getTargetProject();
-        final Document document = new Document();
+
+        final Document document = new Document(XmlConstants.MYBATIS3_MAPPER_PUBLIC_ID,
+                XmlConstants.MYBATIS3_MAPPER_SYSTEM_ID);
         final XmlElement rootElement = new XmlElement("mapper");
         final String generatedMapperType = introspectedTable.getMyBatis3JavaMapperType();
         final String mapperType = generatedMapperType.replaceAll(GEN_PACKAGE + ".(\\S+)" + GENERATED_STR + MAPPER_SUFFIX + "$", "$1" + MAPPER_SUFFIX);
