@@ -25,7 +25,7 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
  **/
 public class BaseMapperInterfacePlugin extends PluginAdapter {
 
-    private static final String DEFAULT_MAPPER_SUPER_CLASS = ".BaseGeneratedMapper";
+    private static final String DEFAULT_MAPPER_SUPER_CLASS = ".gen.BaseMapper";
     private static final FullyQualifiedJavaType PARAM_ANNOTATION_TYPE =
             new FullyQualifiedJavaType("org.apache.ibatis.annotations.Param");
     private static final FullyQualifiedJavaType LIST_TYPE = FullyQualifiedJavaType.getNewListInstance();

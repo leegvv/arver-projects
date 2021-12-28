@@ -72,11 +72,6 @@ public class AoPlugin extends PluginAdapter {
             final String targetPackage = sqlMapConfiguration.getTargetPackage() + "." + GEN_PACKAGE;
             sqlMapConfiguration.setTargetPackage(targetPackage);
         }
-        final JavaClientGeneratorConfiguration clientConfiguration = context.getJavaClientGeneratorConfiguration();
-        if (clientConfiguration != null) {
-            final String targetPackage = clientConfiguration.getTargetPackage() + "." + GEN_PACKAGE;
-            clientConfiguration.setTargetPackage(targetPackage);
-        }
         final JavaModelGeneratorConfiguration modelConfiguration = context.getJavaModelGeneratorConfiguration();
         if (modelConfiguration != null) {
             final String exampleTargetPackage = modelConfiguration.getProperty("exampleTargetPackage");
@@ -89,13 +84,27 @@ public class AoPlugin extends PluginAdapter {
 
     @Override
     public void initialized(final IntrospectedTable introspectedTable) {
-        final String oldMapperType = introspectedTable.getMyBatis3JavaMapperType();
-        final String mapperType = oldMapperType.replaceAll(MAPPER_SUFFIX + "$", GENERATED_STR + MAPPER_SUFFIX);
-        introspectedTable.setMyBatis3JavaMapperType(mapperType);
-
         final String oldXmlMapperName = introspectedTable.getMyBatis3XmlMapperFileName();
         final String xmlFileName = oldXmlMapperName.replaceAll(MAPPER_SUFFIX + ".xml$", GENERATED_STR + MAPPER_SUFFIX + ".xml");
         introspectedTable.setMyBatis3XmlMapperFileName(xmlFileName);
+    }
+
+    @Override
+    public boolean clientGenerated(final Interface interfaze, final IntrospectedTable introspectedTable) {
+        final String targetProject = context.getJavaClientGeneratorConfiguration().getTargetProject();
+        final String targetPackage = context.getJavaClientGeneratorConfiguration().getTargetPackage();
+        try {
+            final File mapperDir = shellCallback.getDirectory(targetProject, targetPackage);
+            final File mapperFile = new File(mapperDir, interfaze.getType().getShortName() + ".java");
+            if (mapperFile.exists()) {
+                return false;
+            }
+        } catch (ShellException e) {
+            e.printStackTrace();
+        }
+        interfaze.addImportedType(MAPPER_TYPE);
+        interfaze.addAnnotation("@Mapper");
+        return true;
     }
 
     @Override
@@ -154,35 +163,6 @@ public class AoPlugin extends PluginAdapter {
             final GeneratedJavaFile mapperJavaFile = new GeneratedJavaFile(baseModelClass, modelTargetProject, javaFileEncoding, javaFormatter);
             mapperJavaFiles.add(mapperJavaFile);
         }
-
-        final String targetProject = context.getJavaClientGeneratorConfiguration().getTargetProject();
-        final String targetPackage = context.getJavaClientGeneratorConfiguration().getTargetPackage();
-        String mapperType = introspectedTable.getMyBatis3JavaMapperType();
-        mapperType = mapperType.replaceAll("." + GEN_PACKAGE + "(.\\S+)" + GENERATED_STR + MAPPER_SUFFIX + "$", "$1" + MAPPER_SUFFIX);
-        final Interface mapperInterface = new Interface(mapperType);
-
-        if (stringHasValue(targetPackage)) {
-            mapperInterface.addJavaDocLine("/**");
-            mapperInterface.addJavaDocLine(" * " + mapperInterface.getType().getShortName() + ".");
-            mapperInterface.addJavaDocLine(" * @author " + System.getProperty("user.name"));
-            mapperInterface.addJavaDocLine(" */");
-            mapperInterface.setVisibility(JavaVisibility.PUBLIC);
-            final FullyQualifiedJavaType mapperSuperType = new FullyQualifiedJavaType(introspectedTable.getMyBatis3JavaMapperType());
-            mapperInterface.addImportedType(mapperSuperType);
-            mapperInterface.addSuperInterface(mapperSuperType);
-            mapperInterface.addImportedType(MAPPER_TYPE);
-            mapperInterface.addAnnotation("@Mapper");
-            try {
-                final GeneratedJavaFile mapperJavaFile = new GeneratedJavaFile(mapperInterface, targetProject, javaFileEncoding, javaFormatter);
-                final File mapperDir = shellCallback.getDirectory(targetProject, targetPackage.replaceAll("." + GEN_PACKAGE + "$", ""));
-                final File mapperFile = new File(mapperDir, mapperJavaFile.getFileName());
-                if (!mapperFile.exists()) {
-                    mapperJavaFiles.add(mapperJavaFile);
-                }
-            } catch (ShellException e) {
-                e.printStackTrace();
-            }
-        }
         this.methods.clear();
         this.fields.clear();
         return mapperJavaFiles;
@@ -202,7 +182,7 @@ public class AoPlugin extends PluginAdapter {
         final String mapperType = generatedMapperType.replaceAll(GEN_PACKAGE + ".(\\S+)" + GENERATED_STR + MAPPER_SUFFIX + "$", "$1" + MAPPER_SUFFIX);
         rootElement.addAttribute(new Attribute("namespace", mapperType));
         final XmlElement resultMapElement = new XmlElement("resultMap");
-        resultMapElement.addAttribute(new Attribute("id", "BaseResultMap"));
+        resultMapElement.addAttribute(new Attribute("id", "ResultMap"));
 
         final String baseRecordType = introspectedTable.getBaseRecordType();
         resultMapElement.addAttribute(new Attribute("type", baseRecordType));

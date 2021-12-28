@@ -14,18 +14,18 @@
 
         <!--生成mapper.xml时覆盖原文件-->
         <plugin type="org.mybatis.generator.plugins.UnmergeableXmlMappersPlugin" />
-        <plugin type="BaseMapperInterfacePlugin" >
+        <plugin type="net.arver.mybatis.maven.plugin.BaseMapperInterfacePlugin" >
             <property name="useExample" value="true"/>
         </plugin>
-        <plugin type="AoPlugin"></plugin>
+        <plugin type="net.arver.mybatis.maven.plugin.AoPlugin"></plugin>
 
         <!-- 为生成的Java模型创建一个toString方法 -->
         <!--<plugin type="org.mybatis.generator.plugins.ToStringPlugin">
             <property name="useToStringFromRoot" value="true"/>
         </plugin>-->
 
-        <plugin type="MySQLPaginationPlugin"></plugin>
-        <commentGenerator type="CommentGenerator">
+        <plugin type="net.arver.mybatis.maven.plugin.MySQLPaginationPlugin"></plugin>
+        <commentGenerator type="net.arver.mybatis.maven.plugin.CommentGenerator">
             <property name="suppressAllComments" value="true"/>
             <property name="suppressDate" value="true"/>
             <property name="addRemarkComments" value="true"/>
@@ -38,7 +38,7 @@
             <property name="nullCatalogMeansCurrent" value="true" />
         </jdbcConnection>
 
-        <javaTypeResolver type="JavaTypeResolverJsr310Impl"/>
+        <javaTypeResolver type="net.arver.mybatis.maven.plugin.JavaTypeResolverJsr310Impl"/>
         <javaModelGenerator targetPackage="example.model" targetProject="src\main\java"/>
 
         <sqlMapGenerator targetPackage="example.mapper" targetProject="src\main\resources"/>
@@ -46,7 +46,10 @@
         <javaClientGenerator type="XMLMAPPER" targetPackage="example.mapper" targetProject="src\main\java">
         </javaClientGenerator>
         <!--生成全部表tableName设为%-->
-        <table tableName="%">
+        <!--<table tableName="%">
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>-->
+        <table tableName="tb_user">
             <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
     </context>
