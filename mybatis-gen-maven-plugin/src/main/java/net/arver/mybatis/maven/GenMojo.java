@@ -9,12 +9,12 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.api.ShellCallback;
+import org.mybatis.generator.api.VerboseProgressCallback;
 import org.mybatis.generator.config.Configuration;
 import org.mybatis.generator.config.xml.ConfigurationParser;
 import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.exception.XMLParserException;
 import org.mybatis.generator.internal.DefaultShellCallback;
-import org.mybatis.generator.internal.NullProgressCallback;
 import org.mybatis.generator.internal.util.messages.Messages;
 
 import java.io.File;
@@ -72,7 +72,7 @@ public class GenMojo extends AbstractMojo {
                     callback, warnings);
             Set<String> fullyqualifiedTables = new HashSet<>();
             Set<String> contexts = new HashSet<>();
-            myBatisGenerator.generate(new NullProgressCallback(), contexts, fullyqualifiedTables);
+            myBatisGenerator.generate(new VerboseProgressCallback(), contexts, fullyqualifiedTables);
 
         } catch (XMLParserException e) {
             for (String error : e.getErrors()) {

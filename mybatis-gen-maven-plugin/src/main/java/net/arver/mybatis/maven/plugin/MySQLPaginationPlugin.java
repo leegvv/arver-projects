@@ -89,7 +89,7 @@ public class MySQLPaginationPlugin extends PluginAdapter {
     @Override
     public boolean sqlMapSelectByExampleWithBLOBsElementGenerated(final XmlElement element, final IntrospectedTable introspectedTable) {
         final XmlElement ifLimitNotNullElement = new XmlElement("if");
-        ifLimitNotNullElement.addAttribute(new Attribute("test", "limt != null"));
+        ifLimitNotNullElement.addAttribute(new Attribute("test", "limit != null"));
 
         final XmlElement ifOffsetNotNullElement = new XmlElement("if");
         ifOffsetNotNullElement.addAttribute(new Attribute("test", "offset != null"));

@@ -1,8 +1,5 @@
 package net.arver.mybatis.maven.plugin;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.JavaFormatter;
@@ -15,6 +12,11 @@ import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.Parameter;
 import org.mybatis.generator.exception.ShellException;
 import org.mybatis.generator.internal.DefaultShellCallback;
+import org.mybatis.generator.internal.util.StringUtility;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
@@ -247,7 +249,7 @@ public class BaseMapperInterfacePlugin extends PluginAdapter {
     }
 
     private boolean isUserExample() {
-        return "true".equals(getProperties().getProperty("useExample"));
+        return StringUtility.isTrue(properties.getProperty("useExample"));
     }
 
     private void interceptExampleParam(final Method method) {
